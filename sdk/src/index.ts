@@ -4,20 +4,56 @@ import {
   http,
   type Address,
   type Hex,
-  encodeFunctionData,
-  parseAbi,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
+import { Attribution } from 'ox/erc8021';
 
-const POLICY_VAULT_ABI = parseAbi([
-  'function spend(uint256 _id, address _to, uint256 _amount, bytes _memo) external',
-  'function getVault(uint256 _id) view returns (address owner, address agent, tuple(uint256 dailyLimit, uint256 perTxLimit, uint256 approvalThreshold, bool paused) policy, uint256 balance, uint256 spentToday, uint256 dayStart)',
-]);
+const POLICY_VAULT_ABI = [
+  {
+    type: 'function',
+    name: 'spend',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: '_id', type: 'uint256' },
+      { name: '_to', type: 'address' },
+      { name: '_amount', type: 'uint256' },
+      { name: '_memo', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'getVault',
+    stateMutability: 'view',
+    inputs: [{ name: '_id', type: 'uint256' }],
+    outputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'agent', type: 'address' },
+      {
+        name: 'policy',
+        type: 'tuple',
+        components: [
+          { name: 'dailyLimit', type: 'uint256' },
+          { name: 'perTxLimit', type: 'uint256' },
+          { name: 'approvalThreshold', type: 'uint256' },
+          { name: 'paused', type: 'bool' },
+        ],
+      },
+      { name: 'balance', type: 'uint256' },
+      { name: 'spentToday', type: 'uint256' },
+      { name: 'dayStart', type: 'uint256' },
+    ],
+  },
+] as const;
 
-/** Default ERC-8021 suffix for Builder Code bc_aby8yf1k */
-export const DEFAULT_BUILDER_SUFFIX =
-  '0x62635f616279387966316b0b0080218021802180218021802180218021' as Hex;
+/** Builder Code from base.dev */
+export const BUILDER_CODE = 'bc_aby8yf1k';
+
+/** ERC-8021 suffix for Builder Code bc_aby8yf1k */
+export const DEFAULT_BUILDER_SUFFIX = Attribution.toDataSuffix({
+  codes: [BUILDER_CODE],
+}) as Hex;
 
 /** PolicyVault on Base mainnet */
 export const POLICY_VAULT_ADDRESS =
@@ -32,18 +68,18 @@ export interface PolicyVaultConfig {
   agentPrivateKey: Hex;
   /** Optional RPC URL (defaults to Base public) */
   rpcUrl?: string;
-  /** Optional ERC-8021 Builder Code data suffix */
+  /**
+   * Optional ERC-8021 Builder Code data suffix.
+   * Defaults to bc_aby8yf1k. Prefer client-level dataSuffix (already set).
+   */
   builderCodeSuffix?: Hex;
 }
 
 /**
  * Create a PolicyVault agent client.
- * One-liner to spend USDC under policy from your agent.
+ * Spends USDC under policy; every tx is attributed with Builder Code.
  *
- * ```ts
- * const agent = createPolicyAgent({ vaultId: 0n, agentPrivateKey: '0x...' });
- * await agent.spend('0xmerchant...', 0.05, 'exa-search-query');
- * ```
+ * @see https://docs.base.org/apps/builder-codes/app-developers
  */
 export function createPolicyAgent(config: PolicyVaultConfig) {
   const {
@@ -61,6 +97,8 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
     chain: base,
     transport,
     account,
+    // Client-level attribution per Base docs
+    dataSuffix: builderCodeSuffix,
   });
 
   return {
@@ -69,24 +107,17 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
     /**
      * Spend USDC from vault. Amount in USDC (e.g. 0.05 = $0.05).
      * Memo is stored onchain in the Spent event for receipts.
-     * Every spend is attributed with Builder Code bc_aby8yf1k.
      */
     async spend(to: Address, amountUsdc: number, memo: string = '') {
       const amount = BigInt(Math.round(amountUsdc * 1e6));
-      const memoHex = (`0x${Buffer.from(memo, 'utf8').toString('hex')}` || '0x') as Hex;
+      const memoHex = (`0x${Buffer.from(memo, 'utf8').toString('hex')}` ||
+        '0x') as Hex;
 
-      const data = encodeFunctionData({
+      const hash = await walletClient.writeContract({
+        address: contractAddress,
         abi: POLICY_VAULT_ABI,
         functionName: 'spend',
         args: [vaultId, to, amount, memoHex],
-      });
-
-      // Append ERC-8021 Builder Code suffix
-      const txData = (data + builderCodeSuffix.slice(2)) as Hex;
-
-      const hash = await walletClient.sendTransaction({
-        to: contractAddress,
-        data: txData,
       });
 
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -101,7 +132,7 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
         functionName: 'getVault',
         args: [vaultId],
       });
-      const [owner, agent, policy, balance, spentToday] = result as any;
+      const [owner, agent, policy, balance, spentToday] = result;
       return {
         owner,
         agent,
