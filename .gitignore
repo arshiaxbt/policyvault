@@ -5,3 +5,5 @@ contracts/out/
 contracts/cache/
 .env
 *.key
+web/.vercel/
+.DS_Store
