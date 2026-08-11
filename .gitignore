@@ -7,3 +7,8 @@ contracts/cache/
 *.key
 web/.vercel/
 .DS_Store
+contracts/broadcast/
+contracts/cache/
+contracts/broadcast/
+.vercel-deploy-args.json
+web/.deploy-args/

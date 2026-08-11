@@ -18,13 +18,18 @@ Base app id meta tag live:
 
 Domain to enter on base.dev: `policyvault-cyan.vercel.app`
 
-## Product demo (Loom)
-
-[Record after deploying mainnet — show: create vault, fund, agent spend, receipt feed, pause]
-
 ## Contract address on Base
 
-`0x...` (deploy via `forge script script/Deploy.s.sol`)
+`0xA99bfE8D56A42C4060568C681804D08432Ab2bD5`
+https://basescan.org/address/0xA99bfE8D56A42C4060568C681804D08432Ab2bD5
+
+## Builder Code
+
+`bc_aby8yf1k`
+
+## Product demo (Loom)
+
+[Record: create vault, fund, agent spend, receipt feed, pause]
 
 ## Track
 
@@ -66,7 +71,7 @@ Domain to enter on base.dev: `policyvault-cyan.vercel.app`
 
 ## Builder Code
 
-[Register at base.dev → Settings → Builder Code]
+`bc_aby8yf1k` (wired into web wagmi config + SDK spends)
 
 ## Primary challenge
 

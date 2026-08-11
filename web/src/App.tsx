@@ -74,7 +74,17 @@ export default function App() {
 
       {/* Footer */}
       <footer style={{ marginTop: 80, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-        Built on Base · Agents track: x402 + ERC-8021 Builder Code
+        Built on Base · Builder Code <span className="mono">bc_aby8yf1k</span>
+        <br />
+        PolicyVault{' '}
+        <a
+          href="https://basescan.org/address/0xA99bfE8D56A42C4060568C681804D08432Ab2bD5"
+          style={{ color: 'var(--accent)' }}
+          target="_blank"
+          rel="noreferrer"
+        >
+          0xA99b…2bD5
+        </a>
       </footer>
     </div>
   );

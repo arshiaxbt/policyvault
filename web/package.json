@@ -14,6 +14,7 @@
   "type": "module",
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
+    "ox": "^1.6.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "viem": "^2.55.13",

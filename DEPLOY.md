@@ -1,69 +1,50 @@
 # Deployment Guide
 
-## Prerequisites
+## Live (Base mainnet)
 
-- Private key with ETH on Base mainnet for gas
-- Base mainnet RPC URL (e.g. from Alchemy, Infura, or public)
+| Item | Value |
+|------|--------|
+| App | https://policyvault-cyan.vercel.app |
+| Contract | [`0xA99bfE8D56A42C4060568C681804D08432Ab2bD5`](https://basescan.org/address/0xA99bfE8D56A42C4060568C681804D08432Ab2bD5) |
+| Deploy tx | [`0x1baa578e978e066110ae7cbd6262fcbb89c5b34af792f55cb4f684a944e72339`](https://basescan.org/tx/0x1baa578e978e066110ae7cbd6262fcbb89c5b34af792f55cb4f684a944e72339) |
+| Builder Code | `bc_aby8yf1k` |
+| ERC-8021 suffix | `0x62635f616279387966316b0b0080218021802180218021802180218021` |
+| USDC | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
 
-## 1. Deploy Smart Contract
+## Redeploy contract
 
 ```bash
 cd contracts
-
-# Set environment
 export BASE_RPC="https://mainnet.base.org"
-export DEPLOYER_PK="0x..."  # your deployer private key
+export DEPLOYER_PK="0x..."
 
-# Deploy
 forge script script/Deploy.s.sol \
   --rpc-url $BASE_RPC \
   --broadcast \
-  --private-key $DEPLOYER_PK \
-  --verify \
-  --etherscan-api-key $BASESCAN_KEY
+  --private-key $DEPLOYER_PK
 ```
 
-Note the deployed address from output.
-
-## 2. Register Builder Code
-
-1. Go to https://base.dev
-2. Register your app → get Builder Code
-3. Update `builderCodeSuffix` in Deploy.s.sol with your actual ERC-8021 suffix
-4. Update SDK config with Builder Code suffix
-
-## 3. Deploy Frontend
+## Frontend
 
 ```bash
 cd web
 npm install
 npm run build
-# Deploy dist/ to Vercel, Cloudflare Pages, or Netlify
+# Deploy dist/ via Vercel
 ```
 
-## 4. Configure SDK
+Builder Code attribution is applied at the Wagmi client level (`src/lib/attribution.ts` + `src/main.tsx`).
 
-```bash
-cd sdk
-npm install
-npm run build
-```
-
-Publish to npm as `@policyvault/sdk` or use locally.
-
-## 5. Run Demo Agent
+## Agent SDK
 
 ```typescript
-import { createPolicyAgent } from '@policyvault/sdk';
+import { createPolicyAgent, POLICY_VAULT_ADDRESS } from '@policyvault/sdk';
 
 const agent = createPolicyAgent({
-  contractAddress: '0x<DEPLOYED_ADDRESS>',
   vaultId: 0n,
-  agentPrivateKey: '0x<AGENT_PK>',
-  builderCodeSuffix: '0x<YOUR_BUILDER_CODE_SUFFIX>',
+  agentPrivateKey: '0x...',
+  // Builder Code bc_aby8yf1k appended by default
 });
 
-// Agent autonomously buys API calls under policy
-const result = await agent.spend('0xexa_address', 0.02, 'web-search');
-console.log('Tx:', result.hash);
+await agent.spend('0xmerchant...', 0.05, 'exa-web-search');
 ```
