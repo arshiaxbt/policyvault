@@ -16,3 +16,4 @@ node_modules/
 web/.deploy-args/
 web/dist/
 web/.vercel/
+.github/workflows/
