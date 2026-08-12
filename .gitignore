@@ -7,6 +7,12 @@ dist/
 *.key
 node_modules/
 .vercel-deploy-args.json
+.vercel-deploy*.json
+.vercel-deploy*.b64
+.vercel-chunk-*.json
+.vercel-meta.json
+.vercel-oneline.json
+.vercel-part-*.json
 web/.deploy-args/
 web/dist/
 web/.vercel/

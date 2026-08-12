@@ -69,6 +69,18 @@ export const policyVaultAbi = [
   },
   {
     type: 'function',
+    name: 'spend',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: '_id', type: 'uint256' },
+      { name: '_to', type: 'address' },
+      { name: '_amount', type: 'uint256' },
+      { name: '_memo', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'getVault',
     stateMutability: 'view',
     inputs: [{ name: '_id', type: 'uint256' }],

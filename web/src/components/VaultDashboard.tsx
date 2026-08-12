@@ -19,11 +19,17 @@ import {
   usdc,
   formatUsdc,
   shortAddress,
-  errMessage,
 } from '../lib/contracts';
+import {
+  type ApproveMode,
+  resolveApproveAmount,
+} from '../lib/approve';
+import { humanError } from '../lib/ux';
 import { useWalletCapabilities } from '../hooks/useWalletCapabilities';
+import ApproveModePicker from './ApproveModePicker';
 import ReceiptFeed from './ReceiptFeed';
 import TxStatus from './TxStatus';
+import OnrampTip from './OnrampTip';
 
 interface Props {
   vaultId: number;
@@ -36,6 +42,8 @@ export default function VaultDashboard({ vaultId }: Props) {
   const { supportsBatching } = useWalletCapabilities();
 
   const [fundAmount, setFundAmount] = useState('10');
+  const [approveMode, setApproveMode] = useState<ApproveMode>('exact');
+  const [customAllowance, setCustomAllowance] = useState('100');
   const [withdrawAmount, setWithdrawAmount] = useState('5');
   const [daily, setDaily] = useState('');
   const [perTx, setPerTx] = useState('');
@@ -96,13 +104,13 @@ export default function VaultDashboard({ vaultId }: Props) {
 
   useEffect(() => {
     if (writeError) {
-      setError(errMessage(writeError));
+      setError(humanError(writeError));
       setStep('idle');
     }
   }, [writeError]);
 
   useEffect(() => {
-    if (batchError) setError(errMessage(batchError));
+    if (batchError) setError(humanError(batchError));
   }, [batchError]);
 
   useEffect(() => {
@@ -175,13 +183,23 @@ export default function VaultDashboard({ vaultId }: Props) {
       setError(`Insufficient USDC (wallet has $${formatUsdc(usdcBalance)})`);
       return;
     }
+    if (approveMode === 'custom' && usdc(customAllowance) <= 0n) {
+      setError('Enter a custom allowance');
+      return;
+    }
+
+    const allowanceAmt = resolveApproveAmount(
+      approveMode,
+      fundAmount,
+      customAllowance
+    );
 
     if (supportsBatching) {
       setStep('fund');
       const approveData = encodeFunctionData({
         abi: erc20Abi,
         functionName: 'approve',
-        args: [POLICY_VAULT_ADDRESS, amount],
+        args: [POLICY_VAULT_ADDRESS, allowanceAmt],
       });
       const fundData = encodeFunctionData({
         abi: policyVaultAbi,
@@ -194,6 +212,15 @@ export default function VaultDashboard({ vaultId }: Props) {
           { to: USDC_ADDRESS, data: approveData },
           { to: POLICY_VAULT_ADDRESS, data: fundData },
         ],
+        ...(import.meta.env.VITE_PAYMASTER_URL
+          ? {
+              capabilities: {
+                paymasterService: {
+                  url: import.meta.env.VITE_PAYMASTER_URL as string,
+                },
+              },
+            }
+          : {}),
       });
       return;
     }
@@ -214,7 +241,7 @@ export default function VaultDashboard({ vaultId }: Props) {
       address: USDC_ADDRESS,
       abi: erc20Abi,
       functionName: 'approve',
-      args: [POLICY_VAULT_ADDRESS, amount],
+      args: [POLICY_VAULT_ADDRESS, allowanceAmt],
       chainId: base.id,
     });
   };
@@ -381,6 +408,13 @@ export default function VaultDashboard({ vaultId }: Props) {
                 {policy.paused ? 'Unpause' : 'Pause'}
               </button>
             </div>
+            <ApproveModePicker
+              mode={approveMode}
+              onModeChange={setApproveMode}
+              customAllowance={customAllowance}
+              onCustomChange={setCustomAllowance}
+              fundAmount={fundAmount}
+            />
             {usdcBalance !== undefined && (
               <p className="muted tiny">
                 Wallet USDC: ${formatUsdc(usdcBalance)}
@@ -471,7 +505,17 @@ export default function VaultDashboard({ vaultId }: Props) {
         )}
       </section>
 
+      {isOwner && <OnrampTip address={address} />}
       <ReceiptFeed vaultId={vaultId} />
+
+      <nav className="vault-tools" aria-label="Vault tools">
+        <a className="btn-outline" href={`/vault/${vaultId}/quickstart`}>
+          Agent SDK snippet
+        </a>
+        <a className="btn-outline" href={`/vault/${vaultId}/alerts`}>
+          Alerts &amp; setup
+        </a>
+      </nav>
     </div>
   );
 }

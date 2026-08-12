@@ -1,18 +1,31 @@
+import { useEffect, useState } from 'react';
+import {
+  useAccount,
+  useChainId,
+  useConnect,
+  useDisconnect,
+  useSwitchChain,
+} from 'wagmi';
+import { base } from 'wagmi/chains';
 import { SignInWithBaseButton } from '@base-org/account-ui/react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { shortAddress } from '../lib/contracts';
+import { isBaseAccountConnector } from '../lib/approve';
+import { walletIconFor } from '../lib/walletIcons';
+import Modal from './Modal';
 
 export default function ConnectBar() {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
-  const { connect, connectors, status, error } = useConnect();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { connect, connectors, status, error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const [open, setOpen] = useState(false);
 
-  const baseConnector = connectors.find(
-    (c) => c.id === 'baseAccount' || c.name.toLowerCase().includes('base')
-  );
-  const injectedConnector = connectors.find(
-    (c) => c.id === 'injected' || c.type === 'injected'
-  );
+  useEffect(() => {
+    if (!isConnected) return;
+    if (chainId === base.id) return;
+    switchChain({ chainId: base.id });
+  }, [isConnected, chainId, switchChain]);
 
   if (isReconnecting) {
     return <div className="connect-bar muted">Reconnecting…</div>;
@@ -21,7 +34,18 @@ export default function ConnectBar() {
   if (isConnected && address) {
     return (
       <div className="connect-bar connected">
-        <span className="mono address-chip">{shortAddress(address)}</span>
+        {chainId !== base.id ? (
+          <button
+            type="button"
+            className="btn-primary btn-sm"
+            disabled={isSwitching}
+            onClick={() => switchChain({ chainId: base.id })}
+          >
+            {isSwitching ? 'Switching…' : 'Switch to Base'}
+          </button>
+        ) : (
+          <span className="mono address-chip">{shortAddress(address)}</span>
+        )}
         <button type="button" className="btn-ghost" onClick={() => disconnect()}>
           Disconnect
         </button>
@@ -29,7 +53,13 @@ export default function ConnectBar() {
     );
   }
 
-  const busy = isConnecting || status === 'pending';
+  const busy = isConnecting || status === 'pending' || isPending;
+  const baseConnector = connectors.find((c) =>
+    isBaseAccountConnector(c.id, c.name)
+  );
+  const otherConnectors = connectors.filter(
+    (c) => !isBaseAccountConnector(c.id, c.name)
+  );
 
   return (
     <div className="connect-bar">
@@ -40,22 +70,64 @@ export default function ConnectBar() {
               align="center"
               variant="solid"
               colorScheme="light"
-              onClick={() => connect({ connector: baseConnector })}
+              onClick={() =>
+                connect({ connector: baseConnector, chainId: base.id })
+              }
             />
           </div>
         )}
-        {injectedConnector && (
-          <button
-            type="button"
-            className="btn-outline"
-            disabled={busy}
-            onClick={() => connect({ connector: injectedConnector })}
-          >
-            {busy ? 'Connecting…' : 'Browser wallet'}
-          </button>
-        )}
+        <button
+          type="button"
+          className="btn-outline"
+          disabled={busy}
+          onClick={() => setOpen(true)}
+        >
+          Other wallets
+        </button>
       </div>
       {error && <p className="err-text">{error.message.slice(0, 160)}</p>}
+
+      <Modal open={open} title="Connect a wallet" onClose={() => setOpen(false)}>
+        <p className="muted tiny">
+          MetaMask, Coinbase Wallet, Safe
+          {otherConnectors.some((c) => c.id === 'walletConnect')
+            ? ', WalletConnect'
+            : ''}
+          . Switches to Base automatically.
+        </p>
+        <div className="wallet-list">
+          {otherConnectors.map((connector) => {
+            const icon = walletIconFor(
+              connector.id,
+              connector.name,
+              connector.icon
+            );
+            return (
+              <button
+                key={connector.uid}
+                type="button"
+                className="wallet-option"
+                disabled={busy}
+                onClick={() => {
+                  connect(
+                    { connector, chainId: base.id },
+                    { onSuccess: () => setOpen(false) }
+                  );
+                }}
+              >
+                {icon ? (
+                  <img src={icon} alt="" width={28} height={28} />
+                ) : (
+                  <span className="wallet-fallback" aria-hidden>
+                    {connector.name.slice(0, 1)}
+                  </span>
+                )}
+                <span>{connector.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Modal>
     </div>
   );
 }

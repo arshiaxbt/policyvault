@@ -4,12 +4,28 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/how", "destination": "/index.html" },
+    { "source": "/faq", "destination": "/index.html" },
+    { "source": "/create", "destination": "/index.html" },
+    { "source": "/vaults", "destination": "/index.html" },
+    { "source": "/vault/:id", "destination": "/index.html" },
+    { "source": "/vault/:id/alerts", "destination": "/index.html" },
+    { "source": "/vault/:id/quickstart", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "no-store" }
       ]
     }
   ]

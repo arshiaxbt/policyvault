@@ -1,0 +1,9 @@
+{
+  "name": "policyvault-agent-runner",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@0xarshia/policyvault": "file:../sdk",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -42,7 +42,7 @@ forge script script/Deploy.s.sol --rpc-url $BASE_RPC --broadcast --private-key $
 ### 2. Use the agent SDK
 
 ```typescript
-import { createPolicyAgent } from '@policyvault/sdk';
+import { createPolicyAgent } from '@0xarshia/policyvault';
 
 const agent = createPolicyAgent({
   contractAddress: '0x...',
@@ -80,7 +80,7 @@ npm run dev
 ```
 policyvault/
 ├── contracts/        # Foundry — PolicyVault.sol + tests + deploy script
-├── sdk/              # TypeScript agent SDK (@policyvault/sdk)
+├── sdk/              # TypeScript agent SDK (npm: @0xarshia/policyvault)
 ├── web/              # Vite + React + wagmi dashboard
 └── README.md
 ```

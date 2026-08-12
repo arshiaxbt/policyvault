@@ -1,0 +1,15 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "PolicyVault",
+  "name_for_model": "policyvault",
+  "description_for_human": "Parental controls for AI agent wallets on Base — fund USDC vaults and set hard spending rules.",
+  "description_for_model": "PolicyVault is an owner dashboard for vaults on Base. Agents must spend offline using npm package @0xarshia/policyvault with AGENT_PRIVATE_KEY in their own environment. Do not ask users to paste private keys into websites.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://policyvault-cyan.vercel.app/openapi.yaml"
+  },
+  "logo_url": "https://policyvault-cyan.vercel.app/icon.svg",
+  "contact_email": "arshiazare15@gmail.com",
+  "legal_info_url": "https://github.com/arshiaxbt/policyvault"
+}

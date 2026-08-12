@@ -47,40 +47,25 @@ const POLICY_VAULT_ABI = [
   },
 ] as const;
 
-/** Builder Code from base.dev */
 export const BUILDER_CODE = 'bc_aby8yf1k';
 
-/** ERC-8021 suffix for Builder Code bc_aby8yf1k */
 export const DEFAULT_BUILDER_SUFFIX = Attribution.toDataSuffix({
   codes: [BUILDER_CODE],
 }) as Hex;
 
-/** PolicyVault on Base mainnet */
 export const POLICY_VAULT_ADDRESS =
   '0xA99bfE8D56A42C4060568C681804D08432Ab2bD5' as Address;
 
 export interface PolicyVaultConfig {
-  /** PolicyVault contract address on Base */
   contractAddress?: Address;
-  /** Vault ID to spend from */
   vaultId: bigint;
-  /** Agent's private key (hex) */
   agentPrivateKey: Hex;
-  /** Optional RPC URL (defaults to Base public) */
   rpcUrl?: string;
-  /**
-   * Optional ERC-8021 Builder Code data suffix.
-   * Defaults to bc_aby8yf1k. Prefer client-level dataSuffix (already set).
-   */
   builderCodeSuffix?: Hex;
+  /** ERC-7677 paymaster URL for smart-account / sponsored paths when supported */
+  paymasterUrl?: string;
 }
 
-/**
- * Create a PolicyVault agent client.
- * Spends USDC under policy; every tx is attributed with Builder Code.
- *
- * @see https://docs.base.org/apps/builder-codes/app-developers
- */
 export function createPolicyAgent(config: PolicyVaultConfig) {
   const {
     contractAddress = POLICY_VAULT_ADDRESS,
@@ -88,6 +73,7 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
     agentPrivateKey,
     rpcUrl,
     builderCodeSuffix = DEFAULT_BUILDER_SUFFIX,
+    paymasterUrl,
   } = config;
 
   const account = privateKeyToAccount(agentPrivateKey);
@@ -97,21 +83,19 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
     chain: base,
     transport,
     account,
-    // Client-level attribution per Base docs
     dataSuffix: builderCodeSuffix,
   });
 
   return {
     account: account.address,
+    paymasterUrl: paymasterUrl || null,
 
-    /**
-     * Spend USDC from vault. Amount in USDC (e.g. 0.05 = $0.05).
-     * Memo is stored onchain in the Spent event for receipts.
-     */
     async spend(to: Address, amountUsdc: number, memo: string = '') {
       const amount = BigInt(Math.round(amountUsdc * 1e6));
-      const memoHex = (`0x${Buffer.from(memo, 'utf8').toString('hex')}` ||
-        '0x') as Hex;
+      const memoBytes = new TextEncoder().encode(memo);
+      const memoHex = (memoBytes.length
+        ? `0x${[...memoBytes].map((b) => b.toString(16).padStart(2, '0')).join('')}`
+        : '0x') as Hex;
 
       const hash = await walletClient.writeContract({
         address: contractAddress,
@@ -124,7 +108,6 @@ export function createPolicyAgent(config: PolicyVaultConfig) {
       return { hash, receipt };
     },
 
-    /** Check remaining balance and daily spend */
     async status() {
       const result = await publicClient.readContract({
         address: contractAddress,

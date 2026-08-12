@@ -1,14 +1,44 @@
 {
-  "name": "@policyvault/sdk",
-  "version": "0.1.0",
-  "description": "Agent SDK — one-line spend under PolicyVault policy on Base",
+  "name": "@0xarshia/policyvault",
+  "version": "0.1.1",
+  "description": "Agent SDK — spend USDC under PolicyVault policy on Base",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arshiaxbt/policyvault.git",
+    "directory": "sdk"
+  },
+  "keywords": [
+    "base",
+    "policyvault",
+    "x402",
+    "agent",
+    "usdc",
+    "erc-8021"
+  ],
+  "author": "0xarshia",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
+    "@0xarshia/policyvault": "^0.1.1",
     "ox": "^1.6.2",
     "viem": "^2.45.0"
   },

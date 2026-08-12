@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useReadContracts } from 'wagmi';
 import {
   POLICY_VAULT_ADDRESS,
@@ -9,10 +10,21 @@ import {
 interface Props {
   ids: number[];
   loading?: boolean;
+  error?: string | null;
   onSelect: (id: number) => void;
+  onRefresh?: () => void;
+  hideTitle?: boolean;
 }
 
-export default function VaultList({ ids, loading, onSelect }: Props) {
+export default function VaultList({
+  ids,
+  loading,
+  error,
+  onSelect,
+  onRefresh,
+  hideTitle = false,
+}: Props) {
+  const [manualId, setManualId] = useState('');
   const contracts = ids.map((id) => ({
     address: POLICY_VAULT_ADDRESS,
     abi: policyVaultAbi,
@@ -25,12 +37,60 @@ export default function VaultList({ ids, loading, onSelect }: Props) {
     query: { enabled: ids.length > 0 },
   });
 
+  const openManual = () => {
+    const n = Number(manualId.trim());
+    if (!Number.isInteger(n) || n < 0) return;
+    onSelect(n);
+  };
+
   return (
     <section className="panel">
-      <h2>Your vaults</h2>
-      {loading && ids.length === 0 && <p className="muted">Scanning chain…</p>}
-      {!loading && ids.length === 0 && (
-        <p className="muted">No vaults yet — create one above.</p>
+      {!hideTitle ? (
+        <div className="dash-head">
+          <h2>Your vaults</h2>
+          {onRefresh && (
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              disabled={loading}
+              onClick={onRefresh}
+            >
+              {loading ? 'Scanning…' : 'Refresh'}
+            </button>
+          )}
+        </div>
+      ) : (
+        onRefresh && (
+          <div className="dash-head">
+            <span />
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              disabled={loading}
+              onClick={onRefresh}
+            >
+              {loading ? 'Scanning…' : 'Refresh'}
+            </button>
+          </div>
+        )
+      )}
+      {loading && ids.length === 0 && (
+        <p className="muted">Loading vaults from Base…</p>
+      )}
+      {!loading && ids.length === 0 && !error && (
+        <p className="muted">
+          No vaults yet —{' '}
+          <a className="link" href="/create">
+            create one
+          </a>
+          .
+        </p>
+      )}
+      {error && (
+        <p className="err-text">
+          Could not refresh from chain ({error.slice(0, 120)}). Showing cache if
+          any — try Refresh, or open by id below.
+        </p>
       )}
       <ul className="vault-list">
         {ids.map((id, i) => {
@@ -55,7 +115,9 @@ export default function VaultList({ ids, loading, onSelect }: Props) {
                   )}
                 </div>
                 <div className="vault-row-right">
-                  <span className={`badge ${paused ? 'badge-paused' : 'badge-active'}`}>
+                  <span
+                    className={`badge ${paused ? 'badge-paused' : 'badge-active'}`}
+                  >
                     {paused ? 'Paused' : 'Active'}
                   </span>
                   {balance !== undefined && (
@@ -67,6 +129,26 @@ export default function VaultList({ ids, loading, onSelect }: Props) {
           );
         })}
       </ul>
+
+      <div className="open-by-id">
+        <label>
+          <span className="muted tiny">Open by vault id</span>
+          <div className="open-by-id-row">
+            <input
+              inputMode="numeric"
+              placeholder="e.g. 0"
+              value={manualId}
+              onChange={(e) => setManualId(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') openManual();
+              }}
+            />
+            <button type="button" className="btn-outline btn-sm" onClick={openManual}>
+              Open
+            </button>
+          </div>
+        </label>
+      </div>
     </section>
   );
 }

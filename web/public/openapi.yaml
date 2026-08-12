@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: PolicyVault
+  version: "0.2.0"
+  description: >
+    Parental controls for AI agent wallets on Base.
+    Owner manages vaults in the web app. Agents spend offline via npm package
+    @0xarshia/policyvault (private keys never submitted to this API).
+servers:
+  - url: https://policyvault-cyan.vercel.app
+paths:
+  /api/alert-telegram:
+    post:
+      operationId: sendTelegramAlert
+      summary: Send a Telegram alert (requires TELEGRAM_BOT_TOKEN on the server)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chatId, text]
+              properties:
+                chatId: { type: string }
+                text: { type: string }
+      responses:
+        "200":
+          description: Sent

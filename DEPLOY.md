@@ -35,10 +35,21 @@ npm run build
 
 Builder Code attribution is applied at the Wagmi client level (`src/lib/attribution.ts` + `src/main.tsx`).
 
+## Vercel env (server)
+
+| Var | Purpose |
+|-----|---------|
+| `TELEGRAM_BOT_TOKEN` | Optional Telegram spend alerts |
+| `BASE_NOTIFICATIONS_API_KEY` | Base Dashboard API key → in-app spend pings |
+| `BASE_APP_URL` | App URL registered on Base Dashboard (default `https://policyvault-cyan.vercel.app`) |
+| `BASE_RPC` / `VITE_BASE_RPC` | Base RPC |
+| `VITE_PAYMASTER_URL` | Optional gas sponsorship |
+| `VITE_WC_PROJECT_ID` | Optional WalletConnect |
+
 ## Agent SDK
 
 ```typescript
-import { createPolicyAgent, POLICY_VAULT_ADDRESS } from '@policyvault/sdk';
+import { createPolicyAgent, POLICY_VAULT_ADDRESS } from '@0xarshia/policyvault';
 
 const agent = createPolicyAgent({
   vaultId: 0n,
