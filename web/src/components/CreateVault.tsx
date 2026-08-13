@@ -31,6 +31,7 @@ import ApproveModePicker from './ApproveModePicker';
 import PolicyPresets from './PolicyPresets';
 import OnrampTip from './OnrampTip';
 import TxStatus from './TxStatus';
+import Collapsible from './Collapsible';
 
 interface Props {
   onCreated: (id: number, agentAddress: `0x${string}`) => void;
@@ -336,47 +337,50 @@ export default function CreateVault({ onCreated }: Props) {
             setApproval(p.approval);
           }}
         />
-        <div className="grid-2">
+
+        <Collapsible label="Customize limits">
+          <div className="grid-2">
+            <label>
+              <span>Daily limit (USDC)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={daily}
+                onChange={(e) => {
+                  setPresetId(undefined);
+                  setDaily(e.target.value);
+                }}
+              />
+            </label>
+            <label>
+              <span>Per-tx max (USDC)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={perTx}
+                onChange={(e) => {
+                  setPresetId(undefined);
+                  setPerTx(e.target.value);
+                }}
+              />
+            </label>
+          </div>
           <label>
-            <span>Daily limit (USDC)</span>
+            <span>Human approval above (USDC)</span>
             <input
               type="number"
               min="0"
               step="0.01"
-              value={daily}
+              value={approval}
               onChange={(e) => {
                 setPresetId(undefined);
-                setDaily(e.target.value);
+                setApproval(e.target.value);
               }}
             />
           </label>
-          <label>
-            <span>Per-tx max (USDC)</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={perTx}
-              onChange={(e) => {
-                setPresetId(undefined);
-                setPerTx(e.target.value);
-              }}
-            />
-          </label>
-        </div>
-        <label>
-          <span>Human approval above (USDC)</span>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={approval}
-            onChange={(e) => {
-              setPresetId(undefined);
-              setApproval(e.target.value);
-            }}
-          />
-        </label>
+        </Collapsible>
 
         <label className="check-row">
           <input
@@ -405,13 +409,15 @@ export default function CreateVault({ onCreated }: Props) {
               </p>
             )}
             <OnrampTip address={address} />
-            <ApproveModePicker
-              mode={approveMode}
-              onModeChange={setApproveMode}
-              customAllowance={customAllowance}
-              onCustomChange={setCustomAllowance}
-              fundAmount={fundAmount}
-            />
+            <Collapsible label="Advanced approve options">
+              <ApproveModePicker
+                mode={approveMode}
+                onModeChange={setApproveMode}
+                customAllowance={customAllowance}
+                onCustomChange={setCustomAllowance}
+                fundAmount={fundAmount}
+              />
+            </Collapsible>
           </>
         )}
 

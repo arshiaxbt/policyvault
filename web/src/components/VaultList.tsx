@@ -6,6 +6,7 @@ import {
   formatUsdc,
   shortAddress,
 } from '../lib/contracts';
+import Collapsible from './Collapsible';
 
 interface Props {
   ids: number[];
@@ -43,6 +44,8 @@ export default function VaultList({
     onSelect(n);
   };
 
+  const empty = !loading && ids.length === 0 && !error;
+
   return (
     <section className="panel">
       {!hideTitle ? (
@@ -74,65 +77,79 @@ export default function VaultList({
           </div>
         )
       )}
+
       {loading && ids.length === 0 && (
-        <p className="muted">Loading vaults from Base…</p>
+        <div className="empty-state">
+          <p className="muted">Loading vaults from Base…</p>
+        </div>
       )}
-      {!loading && ids.length === 0 && !error && (
-        <p className="muted">
-          No vaults yet —{' '}
-          <a className="link" href="/create">
-            create one
+
+      {empty && (
+        <div className="empty-state">
+          <h3>No vaults yet</h3>
+          <p className="muted">
+            Create a cage for your agent wallet, set spend limits, and fund with
+            USDC.
+          </p>
+          <a className="btn-primary" href="/create">
+            Create your first vault
           </a>
-          .
-        </p>
+        </div>
       )}
+
       {error && (
-        <p className="err-text">
-          Could not refresh from chain ({error.slice(0, 120)}). Showing cache if
-          any — try Refresh, or open by id below.
-        </p>
+        <div className="empty-state">
+          <h3>Couldn&apos;t refresh from chain</h3>
+          <p className="err-text">{error.slice(0, 160)}</p>
+          <p className="muted tiny">
+            Showing any cached ids. Try Refresh, or open by vault id below.
+          </p>
+        </div>
       )}
-      <ul className="vault-list">
-        {ids.map((id, i) => {
-          const result = data?.[i];
-          const vault = result?.status === 'success' ? result.result : null;
-          const agent = vault?.[1];
-          const policy = vault?.[2];
-          const balance = vault?.[3];
-          const paused = policy?.paused;
 
-          return (
-            <li key={id}>
-              <button
-                type="button"
-                className="vault-row"
-                onClick={() => onSelect(id)}
-              >
-                <div>
-                  <span className="mono">Vault #{id}</span>
-                  {agent && (
-                    <span className="muted"> · {shortAddress(agent)}</span>
-                  )}
-                </div>
-                <div className="vault-row-right">
-                  <span
-                    className={`badge ${paused ? 'badge-paused' : 'badge-active'}`}
-                  >
-                    {paused ? 'Paused' : 'Active'}
-                  </span>
-                  {balance !== undefined && (
-                    <span className="mono">${formatUsdc(balance)}</span>
-                  )}
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      {ids.length > 0 && (
+        <ul className="vault-list">
+          {ids.map((id, i) => {
+            const result = data?.[i];
+            const vault = result?.status === 'success' ? result.result : null;
+            const agent = vault?.[1];
+            const policy = vault?.[2];
+            const balance = vault?.[3];
+            const paused = policy?.paused;
 
-      <div className="open-by-id">
+            return (
+              <li key={id}>
+                <button
+                  type="button"
+                  className="vault-row"
+                  onClick={() => onSelect(id)}
+                >
+                  <div>
+                    <span className="mono">Vault #{id}</span>
+                    {agent && (
+                      <span className="muted"> · {shortAddress(agent)}</span>
+                    )}
+                  </div>
+                  <div className="vault-row-right">
+                    <span
+                      className={`badge ${paused ? 'badge-paused' : 'badge-active'}`}
+                    >
+                      {paused ? 'Paused' : 'Active'}
+                    </span>
+                    {balance !== undefined && (
+                      <span className="mono">${formatUsdc(balance)}</span>
+                    )}
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <Collapsible label="Open by vault id">
         <label>
-          <span className="muted tiny">Open by vault id</span>
+          <span className="muted tiny">Vault id</span>
           <div className="open-by-id-row">
             <input
               inputMode="numeric"
@@ -148,7 +165,7 @@ export default function VaultList({
             </button>
           </div>
         </label>
-      </div>
+      </Collapsible>
     </section>
   );
 }

@@ -81,12 +81,22 @@ export default function ReceiptFeed({ vaultId }: Props) {
   return (
     <section className="panel">
       <h2>Spending receipts</h2>
-      {loading && <p className="muted">Loading…</p>}
+      {loading && (
+        <div className="empty-state compact">
+          <p className="muted">Loading receipts…</p>
+        </div>
+      )}
       {!loading && receipts.length === 0 && (
-        <p className="muted">
-          No spends yet. When the agent calls <span className="mono">spend</span>,
-          receipts land here from onchain <span className="mono">Spent</span> events.
-        </p>
+        <div className="empty-state compact">
+          <h3>No spends yet</h3>
+          <p className="muted">
+            When your agent calls <span className="mono">spend</span>, receipts
+            show up here from on-chain events.
+          </p>
+          <a className="btn-outline btn-sm" href={`/vault/${vaultId}/quickstart`}>
+            Agent SDK snippet
+          </a>
+        </div>
       )}
       <div className="receipt-feed">
         {receipts.map((r) => (

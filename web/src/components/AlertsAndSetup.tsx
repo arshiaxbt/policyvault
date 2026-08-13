@@ -7,6 +7,7 @@ import {
   shortAddress,
 } from '../lib/contracts';
 import { agentSetupHttps, agentSetupUri } from '../lib/ux';
+import Collapsible from './Collapsible';
 
 interface Props {
   vaultId: number;
@@ -162,19 +163,17 @@ export default function AlertsAndSetup({ vaultId, agent, owner }: Props) {
       </p>
       <div className="setup-grid">
         <div>
-          <p className="muted tiny">Scan to open alerts &amp; setup for this vault:</p>
+          <p className="muted tiny">Scan to open this vault&apos;s setup page:</p>
           <img className="qr" src={qrSrc} alt="Agent setup QR" width={160} height={160} />
-          <p className="mono tiny break">{httpsLink}</p>
-          <button
-            type="button"
-            className="btn-outline btn-sm"
-            onClick={() => navigator.clipboard.writeText(httpsLink)}
-          >
-            Copy setup link
-          </button>
-          <p className="muted tiny mt-2">
-            Deep link: <span className="mono">{deepLink}</span>
-          </p>
+          <div className="action-row mt-2">
+            <button
+              type="button"
+              className="btn-outline btn-sm"
+              onClick={() => navigator.clipboard.writeText(httpsLink)}
+            >
+              Copy setup link
+            </button>
+          </div>
         </div>
         <div className="form-stack">
           <label className="check-row">
@@ -187,35 +186,12 @@ export default function AlertsAndSetup({ vaultId, agent, owner }: Props) {
               }}
             />
             <span>
-              Base App notifications to owner
+              Base App notifications
               <span className="muted tiny block">
-                Pin PolicyVault in Base App and enable notifications. Needs{' '}
-                <span className="mono">BASE_NOTIFICATIONS_API_KEY</span> on the
-                server.
+                Pin PolicyVault in Base App and turn on notifications for the
+                owner wallet.
               </span>
             </span>
-          </label>
-          <label>
-            <span>Webhook URL (optional)</span>
-            <input
-              placeholder="https://hooks.example.com/…"
-              value={webhook}
-              onChange={(e) => {
-                setWebhook(e.target.value.trim());
-                setSaved(false);
-              }}
-            />
-          </label>
-          <label>
-            <span>Telegram chat id (optional)</span>
-            <input
-              placeholder="123456789"
-              value={telegram}
-              onChange={(e) => {
-                setTelegram(e.target.value.trim());
-                setSaved(false);
-              }}
-            />
           </label>
           <div className="action-row">
             <button type="button" className="btn-primary btn-sm" onClick={save}>
@@ -226,6 +202,37 @@ export default function AlertsAndSetup({ vaultId, agent, owner }: Props) {
             </button>
           </div>
           {lastPing && <p className="muted tiny">Last: {lastPing}</p>}
+
+          <Collapsible label="More alert channels">
+            <label>
+              <span>Webhook URL (optional)</span>
+              <input
+                placeholder="https://hooks.example.com/…"
+                value={webhook}
+                onChange={(e) => {
+                  setWebhook(e.target.value.trim());
+                  setSaved(false);
+                }}
+              />
+            </label>
+            <label>
+              <span>Telegram chat id (optional)</span>
+              <input
+                placeholder="123456789"
+                value={telegram}
+                onChange={(e) => {
+                  setTelegram(e.target.value.trim());
+                  setSaved(false);
+                }}
+              />
+            </label>
+            <p className="muted tiny break">
+              Link: <span className="mono">{httpsLink}</span>
+            </p>
+            <p className="muted tiny">
+              Deep link: <span className="mono">{deepLink}</span>
+            </p>
+          </Collapsible>
         </div>
       </div>
     </section>

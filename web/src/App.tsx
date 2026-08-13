@@ -99,15 +99,29 @@ export default function App() {
               <section className="panel home-cta-panel">
                 <h2>You&apos;re connected</h2>
                 <p className="muted">
-                  Manage existing vaults or create a new cage for an agent.
+                  {ids.length === 0
+                    ? 'No vaults yet — create a cage for your agent.'
+                    : 'Manage existing vaults or create a new cage for an agent.'}
                 </p>
                 <div className="home-cta-row">
-                  <a className="btn-primary" href="/vaults">
-                    My vaults{ids.length > 0 ? ` (${ids.length})` : ''}
-                  </a>
-                  <a className="btn-outline" href="/create">
-                    Create vault
-                  </a>
+                  {ids.length > 0 ? (
+                    <a className="btn-primary" href="/vaults">
+                      My vaults ({ids.length})
+                    </a>
+                  ) : (
+                    <a className="btn-primary" href="/create">
+                      Create vault
+                    </a>
+                  )}
+                  {ids.length > 0 ? (
+                    <a className="btn-outline" href="/create">
+                      Create vault
+                    </a>
+                  ) : (
+                    <a className="btn-outline" href="/vaults">
+                      My vaults
+                    </a>
+                  )}
                 </div>
               </section>
             </main>
@@ -165,7 +179,7 @@ export default function App() {
               <h1 className="page-title">Your vaults</h1>
               <p className="muted tiny">Loaded from Base — survives cache clears.</p>
             </div>
-            <div className="home-cta-row left">
+            <div className="home-cta-row">
               {isConnected && (
                 <button
                   type="button"

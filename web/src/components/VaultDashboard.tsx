@@ -30,6 +30,7 @@ import ApproveModePicker from './ApproveModePicker';
 import ReceiptFeed from './ReceiptFeed';
 import TxStatus from './TxStatus';
 import OnrampTip from './OnrampTip';
+import Collapsible from './Collapsible';
 
 interface Props {
   vaultId: number;
@@ -289,15 +290,27 @@ export default function VaultDashboard({ vaultId }: Props) {
   };
 
   if (isLoading) {
-    return <div className="panel">Loading vault #{vaultId}…</div>;
+    return (
+      <div className="panel">
+        <div className="empty-state">
+          <p className="muted">Loading vault #{vaultId}…</p>
+        </div>
+      </div>
+    );
   }
 
   if (isError || !vault) {
     return (
       <div className="panel">
-        <p className="err-text">
-          Could not load vault #{vaultId}. It may not exist onchain yet.
-        </p>
+        <div className="empty-state">
+          <h3>Vault not found</h3>
+          <p className="muted">
+            Vault #{vaultId} isn&apos;t on Base yet, or the RPC failed.
+          </p>
+          <a className="btn-outline" href="/vaults">
+            Back to vaults
+          </a>
+        </div>
       </div>
     );
   }
@@ -408,13 +421,6 @@ export default function VaultDashboard({ vaultId }: Props) {
                 {policy.paused ? 'Unpause' : 'Pause'}
               </button>
             </div>
-            <ApproveModePicker
-              mode={approveMode}
-              onModeChange={setApproveMode}
-              customAllowance={customAllowance}
-              onCustomChange={setCustomAllowance}
-              fundAmount={fundAmount}
-            />
             {usdcBalance !== undefined && (
               <p className="muted tiny">
                 Wallet USDC: ${formatUsdc(usdcBalance)}
@@ -422,73 +428,81 @@ export default function VaultDashboard({ vaultId }: Props) {
               </p>
             )}
 
-            <div className="action-row">
-              <label className="inline-field">
-                <span>Withdraw (USDC)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                className="btn-outline"
-                onClick={handleWithdraw}
-                disabled={busy}
-              >
-                Withdraw
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                onClick={() => setEditing((v) => !v)}
-                disabled={busy}
-              >
-                {editing ? 'Cancel edit' : 'Edit policy'}
-              </button>
-            </div>
-
-            {editing && (
-              <div className="form-stack edit-policy">
-                <div className="grid-2">
-                  <label>
-                    <span>Daily limit</span>
-                    <input
-                      type="number"
-                      value={daily}
-                      onChange={(e) => setDaily(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    <span>Per-tx max</span>
-                    <input
-                      type="number"
-                      value={perTx}
-                      onChange={(e) => setPerTx(e.target.value)}
-                    />
-                  </label>
-                </div>
-                <label>
-                  <span>Approval threshold</span>
+            <Collapsible label="Advanced">
+              <ApproveModePicker
+                mode={approveMode}
+                onModeChange={setApproveMode}
+                customAllowance={customAllowance}
+                onCustomChange={setCustomAllowance}
+                fundAmount={fundAmount}
+              />
+              <div className="action-row">
+                <label className="inline-field">
+                  <span>Withdraw (USDC)</span>
                   <input
                     type="number"
-                    value={approval}
-                    onChange={(e) => setApproval(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
                   />
                 </label>
                 <button
                   type="button"
-                  className="btn-primary"
-                  onClick={handleUpdatePolicy}
+                  className="btn-outline"
+                  onClick={handleWithdraw}
                   disabled={busy}
                 >
-                  Save policy
+                  Withdraw
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setEditing((v) => !v)}
+                  disabled={busy}
+                >
+                  {editing ? 'Cancel edit' : 'Edit policy'}
                 </button>
               </div>
-            )}
+              {editing && (
+                <div className="form-stack edit-policy">
+                  <div className="grid-2">
+                    <label>
+                      <span>Daily limit</span>
+                      <input
+                        type="number"
+                        value={daily}
+                        onChange={(e) => setDaily(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span>Per-tx max</span>
+                      <input
+                        type="number"
+                        value={perTx}
+                        onChange={(e) => setPerTx(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    <span>Approval threshold</span>
+                    <input
+                      type="number"
+                      value={approval}
+                      onChange={(e) => setApproval(e.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleUpdatePolicy}
+                    disabled={busy}
+                  >
+                    Save policy
+                  </button>
+                </div>
+              )}
+            </Collapsible>
           </>
         )}
 
